@@ -41,7 +41,7 @@ You don't need to write code to contribute:
 
 ```bash
 # Fork the repo, then clone your fork
-git clone https://github.com/<your-username>/TheStarkProject.git
+git clone https://github.com/elfalehed/TheStarkProject.git
 cd TheStarkProject
 
 # Install dependencies (monorepo-wide)
