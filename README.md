@@ -57,13 +57,13 @@ Everything is designed to be modular — pick and choose the components relevant
 │                 HEADS-UP (UI)               │
 │        React + WebSocket + 3D overlays      │
 └───────────────────┬─────────────────────────┘
-                     │
+                    │
 ┌───────────────────▼───────────────────────────┐
 │              FRIDAY-CORE (Brain)              │
 │   LLM orchestration · task routing · memory   │
 └───────────────────┬───────────────────────────┘
-                     │
-     ┌───────────────┼────────────────┐
+                    │
+     ┌──────────────┼────────────────┐
      ▼               ▼                ▼
  ARM-CTRL        SWARM-OPS         BENCH-BOT
  (ROS2)          (drone sim)       (IoT/MQTT)
