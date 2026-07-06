@@ -18,6 +18,21 @@ The LLM work lives under [src/llm](src/llm). The initial design focuses on a mod
 - [src/llm/inference/chat_service.py](src/llm/inference/chat_service.py) — minimal chat orchestration layer
 - [src/llm/agents/tool_router.py](src/llm/agents/tool_router.py) — tool registration and dispatch
 
+## Pre-LLM CLI
+
+A lightweight CLI is now available for the earliest version of Friday at [src/llm/cli/pre_llm_cli.py](src/llm/cli/pre_llm_cli.py). It lets you:
+
+- detect the current OS and shell
+- queue ordered tasks before full agent behavior exists
+- inspect pending and completed tasks
+- request admin guidance for Windows or Linux
+
+Run it with:
+
+```bash
+python modules/friday-core/src/llm/cli/pre_llm_cli.py
+```
+
 ## Recommended Next Steps
 
 1. Add a concrete backend implementation such as a Hugging Face model wrapper.
