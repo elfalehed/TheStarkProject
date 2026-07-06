@@ -82,11 +82,16 @@ All modules communicate over a shared **MQTT/WebSocket event bus**, so you can r
 ### Phase 0 — Foundations *(current)*
 - [x] Repo structure & monorepo tooling (Turborepo/Nx)
 - [x] Base README & contribution guidelines
+- [x] Initial Friday Core LLM scaffolding and module structure
+- [x] Early pre-LLM Friday CLI with task orchestration and conversational responses
 - [ ] CI/CD pipeline (lint, test, build)
 - [ ] Core event-bus spec (MQTT topics, message schemas)
 
 ### Phase 1 — The Brain (`FRIDAY-CORE`)
-- [ ] LLM assistant with tool-calling for code generation & debugging
+- [x] Early CLI prototype for a Friday-like assistant
+- [x] Modular LLM workspace structure for model interfaces, inference, and agent/tool routing
+- [x] Lightweight persona layer for greetings, small talk, and mild sarcasm before full training
+- [ ] Real backend model integration (e.g. local transformer or hosted model)
 - [ ] Long-term memory store (vector DB) for project context
 - [ ] Plugin system so new modules can register capabilities
 - [ ] CLI + chat UI clients
@@ -136,6 +141,21 @@ cd TheStarkProject
 pnpm install
 pnpm dev
 ```
+
+### Friday Core CLI preview
+
+You can now run the early Friday prototype locally:
+
+```bash
+python modules/friday-core/src/llm/cli/pre_llm_cli.py
+```
+
+It currently supports:
+- greeting and small-talk responses
+- task queueing and execution
+- OS-aware admin guidance
+- a Friday-style ASCII intro
+- a simple persona layer that can grow before full model training
 
 > Detailed per-module setup instructions will live in each module's own `README.md` under `/modules/<module-name>/`.
 
