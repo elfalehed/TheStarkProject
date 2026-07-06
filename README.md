@@ -54,13 +54,13 @@ Everything is designed to be modular — pick and choose the components relevant
 
 ```
 ┌─────────────────────────────────────────────┐
-│                 HEADS-UP (UI)                │
-│        React + WebSocket + 3D overlays       │
-└───────────────────┬───────────────────────────┘
+│                 HEADS-UP (UI)               │
+│        React + WebSocket + 3D overlays      │
+└───────────────────┬─────────────────────────┘
                      │
 ┌───────────────────▼───────────────────────────┐
-│              FRIDAY-CORE (Brain)               │
-│   LLM orchestration · task routing · memory     │
+│              FRIDAY-CORE (Brain)              │
+│   LLM orchestration · task routing · memory   │
 └───────────────────┬───────────────────────────┘
                      │
      ┌───────────────┼────────────────┐
