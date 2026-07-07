@@ -163,6 +163,7 @@ It currently supports:
 
 The repository now includes:
 - a GitHub Actions workflow that discovers services and runs lint/test/build steps across the monorepo
+- a stricter service-discovery filter so empty scaffold modules no longer appear in CI/CD jobs
 - release automation scaffolding for container images
 - a Docker Compose stack for local orchestration of the core services
 - a Helm chart foundation for Kubernetes-based scaling

@@ -11,12 +11,27 @@ permissions:
   packages: write
 
 jobs:
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.services.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - id: services
+        run: |
+          python scripts/ci/discover_services.py --format github > services.json
+          echo "matrix=$(cat services.json)" >> "$GITHUB_OUTPUT"
+
   package-and-release:
+    needs: discover
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        service: [friday-core, heads-up, bench-bot, vox, sentry, swarm-ops, exo-telem, arc-sim, arm-ctrl]
+        service: ${{ fromJSON(needs.discover.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
       - name: Build container image metadata
