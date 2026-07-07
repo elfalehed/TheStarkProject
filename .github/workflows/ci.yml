@@ -47,8 +47,10 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
-      - name: Enable pnpm
-        run: corepack enable && corepack prepare pnpm@9.15.0 --activate
+      - name: Install pnpm
+        run: npm install -g pnpm@9.15.0
+      - name: Verify pnpm
+        run: pnpm --version
       - name: Install workspace dependencies
         run: pnpm install --frozen-lockfile
       - name: Lint service
@@ -75,8 +77,10 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
-      - name: Enable pnpm
-        run: corepack enable && corepack prepare pnpm@9.15.0 --activate
+      - name: Install pnpm
+        run: npm install -g pnpm@9.15.0
+      - name: Verify pnpm
+        run: pnpm --version
       - name: Install workspace dependencies
         run: pnpm install --frozen-lockfile
       - name: Build workspace targets
