@@ -1,0 +1,36 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  package-and-release:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [friday-core, heads-up, bench-bot, vox, sentry, swarm-ops, exo-telem, arc-sim, arm-ctrl]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build container image metadata
+        run: |
+          echo "SERVICE=${{ matrix.service }}" >> "$GITHUB_ENV"
+          echo "IMAGE=ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:${{ github.ref_name }}" >> "$GITHUB_ENV"
+      - name: Build image
+        run: |
+          if [ -f modules/${{ matrix.service }}/Dockerfile ]; then
+            docker build -t "$IMAGE" modules/${{ matrix.service }}
+          else
+            echo "No Dockerfile for $SERVICE; skipping image build"
+          fi
+      - name: Publish image
+        if: env.IMAGE != ''
+        run: |
+          echo "Publishing $IMAGE"

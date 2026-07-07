@@ -84,7 +84,8 @@ All modules communicate over a shared **MQTT/WebSocket event bus**, so you can r
 - [x] Base README & contribution guidelines
 - [x] Initial Friday Core LLM scaffolding and module structure
 - [x] Early pre-LLM Friday CLI with task orchestration and conversational responses
-- [ ] CI/CD pipeline (lint, test, build)
+- [x] CI/CD pipeline foundation (service discovery, lint/test/build workflow)
+- [x] Container and Kubernetes deployment scaffolding for the multi-service stack
 - [ ] Core event-bus spec (MQTT topics, message schemas)
 
 ### Phase 1 — The Brain (`FRIDAY-CORE`)
@@ -156,6 +157,27 @@ It currently supports:
 - OS-aware admin guidance
 - a Friday-style ASCII intro
 - a simple persona layer that can grow before full model training
+
+### CI/CD and deployment foundation
+
+The repository now includes:
+- a GitHub Actions workflow that discovers services and runs lint/test/build steps across the monorepo
+- release automation scaffolding for container images
+- a Docker Compose stack for local orchestration of the core services
+- a Helm chart foundation for Kubernetes-based scaling
+- per-module dependency files so each service can be installed and tested independently
+
+To install the module dependencies for local development, run:
+
+```bash
+python scripts/dev/setup_modules.py
+```
+
+To verify the Python-based modules after installation, run:
+
+```bash
+python -m pytest modules/friday-core/tests -q
+```
 
 > Detailed per-module setup instructions will live in each module's own `README.md` under `/modules/<module-name>/`.
 

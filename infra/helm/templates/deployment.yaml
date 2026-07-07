@@ -1,0 +1,24 @@
+{{- range $name, $service := .Values.services }}
+{{- if $service.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+spec:
+  replicas: {{ default 1 $service.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ $name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $name }}
+    spec:
+      containers:
+        - name: {{ $name }}
+          image: "ghcr.io/example/{{ $name }}:latest"
+          ports:
+            - containerPort: 80
+---
+{{- end }}
+{{- end }}

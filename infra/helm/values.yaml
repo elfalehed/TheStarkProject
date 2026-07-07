@@ -1,0 +1,10 @@
+services:
+  friday-core:
+    enabled: true
+    replicaCount: 1
+  heads-up:
+    enabled: true
+    replicaCount: 1
+  bench-bot:
+    enabled: true
+    replicaCount: 1

@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  checks: write
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.services.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - id: services
+        run: |
+          python scripts/ci/discover_services.py --format github > services.json
+          echo "matrix=$(cat services.json)" >> "$GITHUB_OUTPUT"
+
+  lint-and-test:
+    needs: discover
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJSON(needs.discover.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Lint service
+        working-directory: ${{ matrix }}
+        run: |
+          if [ -f package.json ]; then
+            pnpm lint --if-present
+          fi
+      - name: Test service
+        working-directory: ${{ matrix }}
+        run: |
+          if [ -f package.json ]; then
+            pnpm test --if-present
+          elif [ -f pyproject.toml ] || [ -f requirements.txt ]; then
+            python -m pytest -q || true
+          fi
+
+  build:
+    needs: [discover, lint-and-test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build workspace targets
+        run: pnpm turbo run build --filter=...[HEAD^] || pnpm turbo run build --filter=...[HEAD~1] || true
