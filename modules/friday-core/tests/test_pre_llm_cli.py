@@ -57,6 +57,37 @@ class PreLLMCLITests(unittest.TestCase):
         self.assertIn("functioning", cli.respond_to_input("how are you"))
         self.assertTrue(any(token in cli.respond_to_input("give me a joke").lower() for token in {"sarcastic", "charming", "balanced"}))
 
+    def test_file_search_and_read_commands(self) -> None:
+        cli = PreLLMFridayCLI(profile=EnvironmentProfile(platform="windows", shell="powershell"))
+
+        found = cli.handle_command("find file pre_llm_cli.py")
+        self.assertIn("pre_llm_cli.py", found.lower())
+
+        content = cli.handle_command("read modules/friday-core/src/llm/cli/pre_llm_cli.py")
+        self.assertIn("class PreLLMFridayCLI", content)
+
+    def test_time_and_weather_commands(self) -> None:
+        cli = PreLLMFridayCLI(profile=EnvironmentProfile(platform="windows", shell="powershell"))
+
+        time_response = cli.handle_command("time")
+        self.assertIn("Current time", time_response)
+
+        with patch("llm.cli.pre_llm_cli.urlopen") as mock_urlopen:
+            mock_urlopen.return_value.__enter__.return_value.read.return_value = b"Sunny"
+            weather_response = cli.handle_command("weather")
+
+        self.assertIn("Sunny", weather_response)
+
+    def test_execute_command_runs_windows_shell(self) -> None:
+        cli = PreLLMFridayCLI(profile=EnvironmentProfile(platform="windows", shell="powershell"))
+
+        with patch("llm.cli.pre_llm_cli.subprocess.run") as mock_run:
+            mock_run.return_value.stdout = b"ok"
+            mock_run.return_value.stderr = b""
+            response = cli.handle_command("execute echo ok")
+
+        self.assertIn("ok", response.lower())
+
 
 if __name__ == "__main__":
     unittest.main()

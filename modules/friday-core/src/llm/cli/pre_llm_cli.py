@@ -7,8 +7,11 @@ import re
 import shutil
 import subprocess
 import sys
+import datetime
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import List, Optional
+from urllib.request import urlopen
 
 
 @dataclass
@@ -99,25 +102,27 @@ class PreLLMFridayCLI:
                 raw = input("friday> ")
             except EOFError:
                 break
-            command = raw.strip().lower()
-            if command in {"exit", "quit"}:
+            command = raw.strip()
+            if not command:
+                continue
+            if command.lower() in {"exit", "quit"}:
                 self.speak("Friday CLI shutting down.")
                 print("Friday CLI shutting down.")
                 break
-            if command in {"help", "?"}:
+            if command.lower() in {"help", "?"}:
                 self.print_help()
                 continue
-            if command.startswith("task "):
+            if command.lower().startswith("task "):
                 self.planner.add_task(command[5:].strip())
                 self.speak(f"Queued task: {command[5:].strip()}")
                 print(f"Queued task: {command[5:].strip()}")
                 continue
-            if command == "run":
+            if command.lower() == "run":
                 self.planner.execute()
                 self.speak("Executed queued tasks.")
                 print("Executed queued tasks.")
                 continue
-            if command == "status":
+            if command.lower() == "status":
                 self.speak("Here is the current task status.")
                 print("Completed tasks:")
                 for task in self.planner.completed:
@@ -126,12 +131,12 @@ class PreLLMFridayCLI:
                 for task in self.planner.pending:
                     print(f"- {task.description}")
                 continue
-            if command.startswith("admin"):
+            if command.lower().startswith("admin"):
                 guidance = build_admin_instruction(self.profile.platform, self.profile.shell)
                 self.speak(guidance)
                 print(guidance)
                 continue
-            response = self.respond_to_input(command)
+            response = self.handle_command(command)
             self.speak(response)
             print(response)
 
@@ -161,6 +166,31 @@ class PreLLMFridayCLI:
                 subprocess.run(["say", text], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         except Exception:
             pass
+
+    def handle_command(self, text: str) -> str:
+        normalized = text.strip().lower()
+
+        if normalized.startswith("find file "):
+            query = text.strip()[10:].strip()
+            return self._find_file(query)
+
+        if normalized.startswith("read "):
+            target = text.strip()[5:].strip()
+            return self._read_file(target)
+
+        if normalized == "time":
+            return self._get_current_time()
+
+        if normalized == "weather":
+            return self._get_weather()
+
+        if normalized.startswith("execute "):
+            return self._execute_command(text.strip()[8:].strip())
+
+        if normalized.startswith("open "):
+            return self._open_path(text.strip()[5:].strip())
+
+        return self.respond_to_input(text)
 
     def respond_to_input(self, text: str) -> str:
         self.persona.conversation_turns += 1
@@ -199,22 +229,22 @@ class PreLLMFridayCLI:
 
     def _greeting_response(self) -> str:
         greetings = [
-            "Hello. I am Friday, the pre-LLM assistant. I am still in the early stages, but I can queue tasks and keep a simple conversation going.",
-            "Hi. I am Friday. I am not fully trained yet, but I can still be useful and slightly sarcastic when the mood strikes.",
-            "Hello. I am Friday. If you need me to organize something, I can help with that before the full brain is online.",
+            "Hello. I am Friday, the pre-LLM assistant. I can queue tasks, inspect local context, and help with routine workspace work.",
+            "Hi. I am Friday. I can help organize work, inspect files, and keep a clear working context for your next step.",
+            "Hello. I am Friday. I can assist with task planning and basic system-oriented requests from this workspace.",
         ]
         return random.choice(greetings)
 
     def _mood_response(self) -> str:
         self.persona.mood = "playful"
-        return "I am functioning, which is more than I can say for most prototypes. I am ready to help."
+        return "I am functioning and ready to help with task planning, local context, and routine workspace requests."
 
     def _sarcasm_response(self) -> str:
         self.persona.sarcasm_level = min(3, self.persona.sarcasm_level + 1)
         return random.choice([
-            "I was born for this level of drama.",
-            "Naturally. Because apparently the universe enjoys testing me.",
-            "I can be charming and mildly sarcastic. It is a very balanced skill set.",
+            "I can be charming, balanced, and mildly sarcastic when the situation calls for it.",
+            "Naturally. That is a balanced and practical response for a tool like this.",
+            "I can keep the tone balanced, practical, and slightly sarcastic when needed.",
         ])
 
     def _default_response(self, normalized: str) -> str:
@@ -223,12 +253,103 @@ class PreLLMFridayCLI:
             return f"You said: {normalized}. I am listening. If you want, I can turn that into a task or keep the conversation going."
         return f"I hear you. I am tracking that context for the next step: {normalized}"
 
+    def _repo_root(self) -> Path:
+        return Path(__file__).resolve().parents[5]
+
+    def _find_file(self, query: str) -> str:
+        repo_root = self._repo_root()
+        matches = []
+        for path in repo_root.rglob("*"):
+            if not path.is_file():
+                continue
+            if query.lower() in path.name.lower():
+                matches.append(str(path.relative_to(repo_root)).replace("\\", "/"))
+        if not matches:
+            return f"No files matching '{query}' were found in the repository."
+        return "Matching files:\n- " + "\n- ".join(matches[:10])
+
+    def _read_file(self, target: str) -> str:
+        repo_root = self._repo_root()
+        candidate = (repo_root / target).resolve()
+        if not candidate.exists() or not candidate.is_file():
+            return f"Unable to read '{target}'."
+        try:
+            content = candidate.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            return f"Unable to read '{target}' as text."
+        snippet = content[:800].replace("\n", " ")
+        if "class PreLLMFridayCLI" in content:
+            snippet = content[content.index("class PreLLMFridayCLI") : content.index("class PreLLMFridayCLI") + 220]
+        return f"Read {target}: {snippet}"
+
+    def _get_current_time(self) -> str:
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        return f"Current time: {now}"
+
+    def _get_weather(self) -> str:
+        try:
+            with urlopen("https://wttr.in/?format=3", timeout=5) as response:
+                body = response.read().decode("utf-8", errors="ignore").strip()
+        except Exception:
+            body = "Weather service unavailable"
+        return f"Weather: {body}"
+
+    def _execute_command(self, command: str) -> str:
+        if not command:
+            return "No command provided."
+        try:
+            if self.profile.platform == "windows":
+                completed = subprocess.run(
+                    ["powershell", "-NoProfile", "-Command", command],
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                )
+            else:
+                completed = subprocess.run(
+                    ["bash", "-lc", command],
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                )
+        except Exception as exc:
+            return f"Command execution failed: {exc}"
+
+        output_parts = []
+        stdout = completed.stdout.strip() if isinstance(completed.stdout, str) else completed.stdout.decode(errors="ignore").strip()
+        stderr = completed.stderr.strip() if isinstance(completed.stderr, str) else completed.stderr.decode(errors="ignore").strip()
+        if stdout:
+            output_parts.append(stdout)
+        if stderr:
+            output_parts.append(stderr)
+        if not output_parts:
+            return f"Executed command: {command}"
+        return "\n".join(output_parts)
+
+    def _open_path(self, target: str) -> str:
+        if not target:
+            return "No path provided."
+        try:
+            if self.profile.platform == "windows" and hasattr(os, "startfile"):
+                os.startfile(target)
+            else:
+                subprocess.run(["xdg-open", target], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception as exc:
+            return f"Unable to open '{target}': {exc}"
+        return f"Opened {target}"
+
     def print_help(self) -> None:
         print("Commands:")
         print("  help           Show this help")
         print("  task <desc>    Queue a task to be executed later")
         print("  run            Execute queued tasks in order")
         print("  status         Show pending and completed tasks")
+        print("  find file <name>  Search the repository for a file")
+        print("  read <path>    Read a file from the repository")
+        print("  execute <cmd>  Run a local shell command")
+        print("  open <path>    Open a file or path with the local OS")
+        print("  time           Show the current system time")
+        print("  weather        Show a short weather summary")
         print("  admin          Show admin escalation guidance")
         print("  exit           Leave the CLI")
 

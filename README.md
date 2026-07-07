@@ -22,7 +22,7 @@ This project is a **fan-inspired, original engineering effort**. It is not affil
 
 ## 🎯 Vision
 
-The goal is to prototype, document, and open-source a modular set of tools that together feel like a "workshop AI operator" — something that can:
+The goal is to prototype, document, and open-source a modular set of tools that together form a practical workshop operator platform — something that can:
 
 - Talk to you and help you code, debug, and design
 - Monitor and control robotics hardware (arms, drones, exosuits)
@@ -89,9 +89,10 @@ All modules communicate over a shared **MQTT/WebSocket event bus**, so you can r
 - [ ] Core event-bus spec (MQTT topics, message schemas)
 
 ### Phase 1 — The Brain (`FRIDAY-CORE`)
-- [x] Early CLI prototype for a Friday-like assistant
+- [x] Early CLI implementation for a Friday-like assistant
 - [x] Modular LLM workspace structure for model interfaces, inference, and agent/tool routing
-- [x] Lightweight persona layer for greetings, small talk, and mild sarcasm before full training
+- [x] Structured conversational layer for greetings and context-aware responses before full model training
+- [x] Windows-friendly local command support for file lookup, file reading, time checks, weather lookup, and command execution in the pre-LLM CLI
 - [ ] Real backend model integration (e.g. local transformer or hosted model)
 - [ ] Long-term memory store (vector DB) for project context
 - [ ] Plugin system so new modules can register capabilities
@@ -145,7 +146,7 @@ pnpm dev
 
 ### Friday Core CLI preview
 
-You can now run the early Friday prototype locally:
+You can now run the Friday CLI locally:
 
 ```bash
 python modules/friday-core/src/llm/cli/pre_llm_cli.py
@@ -156,7 +157,7 @@ It currently supports:
 - task queueing and execution
 - OS-aware admin guidance
 - a Friday-style ASCII intro
-- a simple persona layer that can grow before full model training
+- a structured conversational layer that can grow before full model training
 
 ### CI/CD and deployment foundation
 
